@@ -29,10 +29,10 @@ class TransformCommand extends Command
                 'The directory of the data to output (defaults to "data/out").'
             )
             ->addOption(
-               'keep-comments',
-               null,
-               InputOption::VALUE_NONE,
-               'If set, will not strip comments from XML.'
+                'keep-comments',
+                null,
+                InputOption::VALUE_NONE,
+                'If set, will not strip comments from XML.'
             )
             ->addOption(
                 'delete-output-dir',
@@ -49,15 +49,15 @@ class TransformCommand extends Command
 
         // Parse input and output directories.
         $input_dir = $input->getArgument('input_dir');
-        if ($input_dir === NULL) {
+        if ($input_dir === null) {
             $input_dir = BASE_DIR . '/data';
-        } else if (substr($input_dir, 0, 1) != '/') {
+        } elseif (substr($input_dir, 0, 1) != '/') {
             $input_dir  = BASE_DIR . '/' . $input_dir;
         }
         $output_dir = $input->getArgument('output_dir');
-        if ($output_dir === NULL) {
+        if ($output_dir === null) {
             $output_dir = BASE_DIR . '/data/out';
-        } else if (substr($output_dir, 0, 1) != '/') {
+        } elseif (substr($output_dir, 0, 1) != '/') {
             $output_dir  = BASE_DIR . '/' . $output_dir;
         }
 
@@ -90,7 +90,6 @@ class TransformCommand extends Command
         // Iterate over files.
         $errors = [];
         foreach ($finder as $file) {
-
             // Optionally clear comments.
             $contents = $file->getContents();
             if (!$input->getOption('keep-comments')) {
@@ -103,16 +102,16 @@ class TransformCommand extends Command
                 $dom->loadXML($contents);
             } catch (\ErrorException $e) {
                 // Couldn't read the file for some reason
-                $dom = NULL;
+                $dom = null;
                 $errors[] = 'DOMDocument could not load file ' . $file->getRelativePathname();
             }
 
             // Iterate over fields in this document.
-            if ($dom !== NULL) {
+            if ($dom !== null) {
                 $xpath = new \DOMXPath($dom);
-                foreach($xpath->query("/mysqldump/database/table_data/row/field") as $field) {
+                foreach ($xpath->query("/mysqldump/database/table_data/row/field") as $field) {
                     // Attempt to skip serialized fields.
-                    if ($this::is_serialized($field->nodeValue)) {
+                    if ($this::isSerialized($field->nodeValue)) {
                         // Try to unserialize the data, catch errors and log them.
                         try {
                             $raw = unserialize(htmlspecialchars_decode($field->nodeValue));
@@ -146,27 +145,33 @@ class TransformCommand extends Command
         }
     }
 
-    public static function is_serialized( $data ) {
+    public static function isSerialized($data)
+    {
         // if it isn't a string, it isn't serialized
-        if ( !is_string( $data ) )
+        if (!is_string($data)) {
             return false;
-        $data = trim( $data );
-        if ( 'N;' == $data )
+        }
+        $data = trim($data);
+        if ('N;' == $data) {
             return true;
-        if ( !preg_match( '/^([adObis]):/', $data, $badions ) )
+        }
+        if (!preg_match('/^([adObis]):/', $data, $badions)) {
             return false;
-        switch ( $badions[1] ) {
-            case 'a' :
-            case 'O' :
-            case 's' :
-                if ( preg_match( "/^{$badions[1]}:[0-9]+:.*[;}]\$/s", $data ) )
+        }
+        switch ($badions[1]) {
+            case 'a':
+            case 'O':
+            case 's':
+                if (preg_match("/^{$badions[1]}:[0-9]+:.*[;}]\$/s", $data)) {
                     return true;
+                }
                 break;
-            case 'b' :
-            case 'i' :
-            case 'd' :
-                if ( preg_match( "/^{$badions[1]}:[0-9.E-]+;\$/", $data ) )
+            case 'b':
+            case 'i':
+            case 'd':
+                if (preg_match("/^{$badions[1]}:[0-9.E-]+;\$/", $data)) {
                     return true;
+                }
                 break;
         }
         return false;

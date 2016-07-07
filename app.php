@@ -8,7 +8,10 @@ define('BASE_DIR', __DIR__);
 use App\Console\Command\TransformCommand;
 use Symfony\Component\Console\Application;
 
-set_error_handler(function($errno, $errstr, $errfile, $errline, array $errcontext) {
+/**
+ * Custom error handler to allow app to better handle errors.
+ */
+set_error_handler(function ($errno, $errstr, $errfile, $errline, array $errcontext) {
     // error was suppressed with the @-operator
     if (0 === error_reporting()) {
         return false;
